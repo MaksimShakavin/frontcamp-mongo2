@@ -100,3 +100,22 @@ db.airlines.aggregate(
 { "totalPassengers" : 571452, "location" : { "city" : "Little Rock, AR", "state" : "Arkansas" } }
 { "totalPassengers" : 23701556, "location" : { "city" : "Los Angeles, CA", "state" : "California" } }
 ```
+### Enron task
+#### Query:
+```javascript
+db.enron.aggregate([
+    {$unwind : "$headers.To" },
+    {$group:{_id:{id:"$_id"}, from:{$first:"$headers.From"}, to:{$addToSet: "$headers.To"}}},
+    {$unwind : "$to" },
+    {$group:{_id:{from:"$from", to:"$to"},count:{$sum:1}}},
+    {$sort:{"count":-1}},
+    {$limit:1},
+    {$project:{from:"$_id.from", to:"$_id.to", count:"$count", _id:0}}
+    ],
+    {allowDiskUse: true}
+)
+```
+### Result:
+```
+{ "from" : "susan.mara@enron.com", "to" : "jeff.dasovich@enron.com", "count" : 750 }
+```
